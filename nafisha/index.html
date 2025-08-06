@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Energy Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
+  h1 { text-align: center; }
+  .controls { text-align: center; margin: 20px; }
+  button { padding: 10px 20px; margin: 5px; }
+  #status { text-align: center; margin: 10px; font-weight: bold; }
+  canvas { background: white; padding: 10px; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Fridge Energy Dashboard</h1>
+
+<div class="controls">
+  <button onclick="turnOn()">Turn ON</button>
+  <button onclick="turnOff()">Turn OFF</button>
+</div>
+
+<div id="status">Loading latest status...</div>
+
+<canvas id="energyChart" width="400" height="200"></canvas>
+
+<script>
+async function fetchHistory() {
+  const res = await fetch('/api/history');
+  return await res.json();
+}
+
+async function fetchStatus() {
+  const res = await fetch('/api/status');
+  try {
+    const data = await res.json();
+    document.getElementById('status').innerText = "Live Status: " + JSON.stringify(data.result);
+  } catch {
+    document.getElementById('status').innerText = "Live Status: Error loading data";
+  }
+}
+
+async function turnOn() {
+  await fetch('/api/control/on', { method: 'POST' });
+  alert('Turned ON');
+}
+
+async function turnOff() {
+  await fetch('/api/control/off', { method: 'POST' });
+  alert('Turned OFF');
+}
+
+async function drawChart() {
+  const history = await fetchHistory();
+  const labels = history.map(item => new Date(item.time).toLocaleTimeString());
+  const values = history.map(item => item.wattage || 0);
+
+  new Chart(document.getElementById('energyChart'), {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Wattage (W)',
+        data: values,
+        fill: false,
+        borderColor: 'blue',
+        tension: 0.1
+      }]
+    }
+  });
+}
+
+// Initial load
+fetchStatus();
+drawChart();
+// Refresh status every 1 minute
+setInterval(fetchStatus, 60000);
+</script>
+
+</body>
+</html>

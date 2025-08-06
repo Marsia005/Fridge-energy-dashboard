@@ -1,0 +1,12 @@
+# Hide secret keys
+.env
+
+# Hide local logs/data
+history.json
+
+# Ignore dependencies (these can be reinstalled)
+node_modules/
+
+# Ignore system files (optional)
+.DS_Store
+Thumbs.db
